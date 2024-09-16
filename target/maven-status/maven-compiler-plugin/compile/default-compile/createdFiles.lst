@@ -1,0 +1,10 @@
+de\villigi\enderlab\api\AddonApi.class
+de\villigi\enderlab\database\addonAvailability\AddonAvailabilitys.class
+de\villigi\enderlab\commands\SettingsCMD.class
+de\villigi\enderlab\api\InventoryApi.class
+de\villigi\enderlab\api\LanguageApi.class
+de\villigi\enderlab\api\MessageApi.class
+de\villigi\enderlab\database\DatabaseManager.class
+de\villigi\enderlab\EnderLabApi.class
+de\villigi\enderlab\api\ItemBuilder.class
+de\villigi\enderlab\api\MysqlApi.class
