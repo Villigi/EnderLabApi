@@ -5,28 +5,37 @@ import org.bukkit.Bukkit;
 import org.bukkit.ChatColor;
 import org.bukkit.Material;
 import org.bukkit.entity.Player;
+import org.bukkit.event.EventHandler;
+import org.bukkit.event.Listener;
 import org.bukkit.event.inventory.InventoryClickEvent;
 import org.bukkit.event.inventory.InventoryCloseEvent;
+import org.bukkit.event.inventory.InventoryInteractEvent;
 import org.bukkit.inventory.Inventory;
 import org.bukkit.inventory.ItemStack;
 import org.bukkit.inventory.meta.ItemMeta;
+import org.w3c.dom.events.Event;
 
 import java.sql.Connection;
 import java.sql.PreparedStatement;
 import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 
-public class MessageInv {
+public class MessageInv implements Listener {
     private final Connection connection;
+
+    private Map<Player, Integer> playerPages = new HashMap<>();
+    private List<Player> inPage = new ArrayList<>();
 
     public MessageInv() {
         this.connection = EnderLabApi.getInstance().getDatabaseManager().getConnection();
     }
 
     public  void openPagedInventory(Player player, int page) {
-        int entriesPerPage = 27; // Anzahl der Einträge pro Seite (ohne Navigationszeile)
+        int entriesPerPage = 45; // Anzahl der Einträge pro Seite (ohne Navigationszeile)
         List<MessageEntry> messageEntries = getMessageEntries(); // Alle Nachrichten aus der Datenbank
 
         // Berechne die maximale Anzahl der Seiten
@@ -37,33 +46,38 @@ public class MessageInv {
         if (page >= totalPages) page = totalPages - 1;
 
         // Erstelle das Inventar mit 6 Reihen (54 Slots)
-        Inventory inventory = Bukkit.createInventory(null, 54, ChatColor.DARK_PURPLE + "Messages - Seite " + (page + 1));
+        Inventory inventory = Bukkit.createInventory(null, 54,"Messages - §bSeite " + (page + 1));
 
         // Fülle das Inventar mit den Einträgen der aktuellen Seite
         int startIndex = page * entriesPerPage;
         int endIndex = Math.min(startIndex + entriesPerPage, messageEntries.size());
+        if(getMessageEntries() != null) {
+            for (int i = startIndex; i < endIndex; i++) {
+                MessageEntry entry = messageEntries.get(i);
 
-        for (int i = startIndex; i < endIndex; i++) {
-            MessageEntry entry = messageEntries.get(i);
+                // Erstelle ein ItemStack für die Feder
+                ItemStack feather = new ItemStack(Material.FEATHER);
+                ItemMeta meta = feather.getItemMeta();
+                if (meta != null) {
+                    // Setze den Titel (Placeholder)
+                    meta.setDisplayName("§7Placeholder: §b" + entry.getPlaceholder());
 
-            // Erstelle ein ItemStack für die Feder
-            ItemStack feather = new ItemStack(Material.FEATHER);
-            ItemMeta meta = feather.getItemMeta();
-            if (meta != null) {
-                // Setze den Titel (Placeholder)
-                meta.setDisplayName(ChatColor.GOLD + entry.getPlaceholder());
+                    // Setze die Lore (Message)
+                    List<String> lore = new ArrayList<>();
+                    lore.add("§7Lore: §b" + entry.getMessage());
+                    meta.setLore(lore);
 
-                // Setze die Lore (Message)
-                List<String> lore = new ArrayList<>();
-                lore.add(ChatColor.WHITE + entry.getMessage());
-                meta.setLore(lore);
+                    feather.setItemMeta(meta);
+                }
 
-                feather.setItemMeta(meta);
+                // Füge das Item dem Inventar hinzu
+                inventory.addItem(feather);
             }
-
-            // Füge das Item dem Inventar hinzu
-            inventory.addItem(feather);
+        }else{
+            System.out.println("Es sind keine Messageeinträge vorhanden.");
         }
+
+
 
         // Füge Navigations-Items hinzu
         ItemStack previousPage = new ItemStack(Material.ARROW);
@@ -91,6 +105,14 @@ public class MessageInv {
 
         // Öffne das Inventar für den Spieler
         player.openInventory(inventory);
+        inPage.add(player);
+    }
+
+    @EventHandler
+    public void onInvClose(InventoryCloseEvent event) {
+        if(inPage.contains(event.getPlayer())) {
+            inPage.remove(event.getPlayer());
+        }
     }
 
     // Methode zum Abrufen der Daten aus der Datenbank
@@ -115,9 +137,13 @@ public class MessageInv {
         return messageEntries;
     }
 
-    // Event-Handler für Inventar-Interaktionen
-    public void onInventoryClick(InventoryClickEvent event, Player player, int currentPage) {
+
+    @EventHandler
+    public void onInventoryClick(InventoryClickEvent event) {
         if (event.getCurrentItem() == null) return;
+
+        Player player = (Player) event.getWhoClicked(); // Hole den Spieler aus dem Event
+        int currentPage = getCurrentPage(player); // Hole die aktuelle Seite (falls du diese Information speicherst)
 
         ItemStack clickedItem = event.getCurrentItem();
         if (clickedItem.getType() == Material.ARROW) {
@@ -134,10 +160,32 @@ public class MessageInv {
         event.setCancelled(true); // Verhindere, dass der Spieler Items aus dem Inventar nimmt
     }
 
-    // Event-Handler für das Schließen des Inventars (optional, falls Cleanup nötig ist)
-    public void onInventoryClose(InventoryCloseEvent event) {
-        // Hier könnte man Cleanup-Operationen durchführen, falls nötig
+
+
+    public void openEditInventory(Player player, String placeholder) {
+        // Setze den Placeholder im Titel des Inventars
+        Inventory editInventory = Bukkit.createInventory(null, 9, "Bearbeite: " + placeholder);
+
+        ItemStack book = new ItemStack(Material.WRITABLE_BOOK);
+        ItemMeta meta = book.getItemMeta();
+        if (meta != null) {
+            meta.setDisplayName(ChatColor.GOLD + "Bearbeite die Nachricht für " + placeholder);
+            book.setItemMeta(meta);
+        }
+
+        editInventory.setItem(4, book); // Buch in die Mitte des Inventars legen
+        player.openInventory(editInventory); // Öffne das neue Inventar für den Spieler
     }
+
+
+    public int getCurrentPage(Player player) {
+        return playerPages.getOrDefault(player, 1); // Standardwert 1, falls keine Seite gespeichert ist
+    }
+
+    public void setCurrentPage(Player player, int page) {
+        playerPages.put(player, page);
+    }
+
 }
 
 class MessageEntry {

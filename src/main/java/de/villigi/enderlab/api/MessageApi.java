@@ -27,11 +27,14 @@ public class MessageApi {
 
     public void addMessage(String message) {
         //messages      Placeholder    Messages
-        try {
-            PreparedStatement statement = EnderLabApi.getInstance().getDatabaseManager().getConnection().prepareStatement("INSERT INTO messages (Placeholder, Message) VALUES ('" + placeholder + "', '" + message + "');");
-            statement.executeUpdate();
-        } catch (SQLException e) {
-            e.printStackTrace();
+
+        if(!isPlaceholderInDatabase(placeholder)) {
+            try {
+                PreparedStatement statement = EnderLabApi.getInstance().getDatabaseManager().getConnection().prepareStatement("INSERT INTO messages (Placeholder, Message) VALUES ('" + placeholder + "', '" + message + "');");
+                statement.executeUpdate();
+            } catch (SQLException e) {
+                e.printStackTrace();
+            }
         }
     }
 
@@ -80,10 +83,35 @@ public class MessageApi {
         } catch (SQLException e) {
             e.printStackTrace();
         }
-
-
     }
 
+    public boolean isPlaceholderInDatabase(String placeholder) {
+        boolean exists = false;
+        try {
+            // Bereite die SQL-Abfrage vor, um nach dem Placeholder zu suchen
+            PreparedStatement statement = EnderLabApi.getInstance().getDatabaseManager().getConnection()
+                    .prepareStatement("SELECT COUNT(*) FROM `messages` WHERE `Placeholder` = ?;");
+
+            // Setze den Placeholder in das PreparedStatement ein
+            statement.setString(1, placeholder);
+
+            // Führe die Abfrage aus
+            ResultSet resultSet = statement.executeQuery();
+
+            // Prüfe das Ergebnis
+            if (resultSet.next()) {
+                // Wenn COUNT(*) > 0, dann existiert der Placeholder
+                exists = resultSet.getInt(1) > 0;
+            }
+
+        } catch (SQLException e) {
+            e.printStackTrace();
+        }
+
+        return exists;
     }
+
+
+}
 
 

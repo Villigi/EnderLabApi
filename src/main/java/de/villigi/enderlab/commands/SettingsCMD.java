@@ -28,7 +28,7 @@ public class SettingsCMD implements CommandExecutor, TabCompleter {
         Player p = (Player) commandSender;
         if(p.hasPermission("api.commands.settings")) {
             //TODO: Open settings inventory
-            if(args[1].equalsIgnoreCase("messages")) {
+            if(args[0].equalsIgnoreCase("messages")) {
                 MessageInv messageInv = new MessageInv();
                 messageInv.openPagedInventory(p, 1);
             }
