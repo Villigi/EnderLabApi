@@ -1,6 +1,7 @@
 package de.villigi.enderlab.database;
 
 import de.villigi.enderlab.EnderLabApi;
+import org.bukkit.Bukkit;
 import org.bukkit.configuration.file.FileConfiguration;
 import org.bukkit.configuration.file.YamlConfiguration;
 
@@ -41,6 +42,10 @@ public class DatabaseManager {
         if(!EnderLabApi.getInstance().getDataFolder().exists()) {
             EnderLabApi.getInstance().getDataFolder().mkdirs();
         }
+
+
+
+
 
         sql_file = new File(EnderLabApi.getInstance().getDataFolder(), "mysql.yml");
 

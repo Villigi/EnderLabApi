@@ -1,4 +1,0 @@
-name: EnderLabApi
-version: '1.0-SNAPSHOT'
-main: de.villigi.enderLabApi.EnderLabApi
-api-version: '1.21'

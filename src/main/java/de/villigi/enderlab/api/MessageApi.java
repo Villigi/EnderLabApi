@@ -1,12 +1,23 @@
 package de.villigi.enderlab.api;
 
 import de.villigi.enderlab.EnderLabApi;
+import org.bukkit.Bukkit;
+import org.bukkit.ChatColor;
+import org.bukkit.Material;
+import org.bukkit.entity.Player;
+import org.bukkit.event.inventory.InventoryClickEvent;
+import org.bukkit.event.inventory.InventoryCloseEvent;
+import org.bukkit.inventory.Inventory;
+import org.bukkit.inventory.ItemStack;
+import org.bukkit.inventory.meta.ItemMeta;
 
 import java.sql.Connection;
 import java.sql.PreparedStatement;
 import java.sql.ResultSet;
 import java.sql.SQLException;
+import java.util.ArrayList;
 import java.util.HashMap;
+import java.util.List;
 
 public class MessageApi {
     private String placeholder;
@@ -27,9 +38,9 @@ public class MessageApi {
     public String getMessage() {
         String message = "";
         try {
-            PreparedStatement statement = EnderLabApi.getInstance().getDatabaseManager().getConnection().prepareStatement("SELECT * FROM `messages` WHERE Placeholder = ` " + placeholder + "`;");
-            ResultSet resultSet = null;
-            resultSet = statement.executeQuery();
+            PreparedStatement statement = EnderLabApi.getInstance().getDatabaseManager().getConnection().prepareStatement("SELECT Message FROM `messages` WHERE Placeholder = ?;");
+            statement.setString(1, placeholder);
+            ResultSet resultSet = statement.executeQuery();
             if(resultSet.next()) {
                 message = resultSet.getString("Message");
             }else{
@@ -69,5 +80,10 @@ public class MessageApi {
         } catch (SQLException e) {
             e.printStackTrace();
         }
+
+
     }
-}
+
+    }
+
+

@@ -1,7 +1,10 @@
 package de.villigi.enderlab;
 
 import de.villigi.enderlab.api.MessageApi;
+import de.villigi.enderlab.commands.SettingsCMD;
 import de.villigi.enderlab.database.DatabaseManager;
+import de.villigi.enderlab.listener.JoinListener;
+import org.bukkit.Bukkit;
 import org.bukkit.plugin.java.JavaPlugin;
 
 import java.sql.SQLException;
@@ -9,6 +12,7 @@ import java.sql.SQLException;
 public final class EnderLabApi extends JavaPlugin {
 
     private static EnderLabApi instance;
+
     public DatabaseManager databaseManager;
 
     public static String prefix = " ";
@@ -17,9 +21,11 @@ public final class EnderLabApi extends JavaPlugin {
 
     @Override
     public void onEnable() {
+        System.out.println("Enableing...");
         instance = this;
         databaseManager = new DatabaseManager();
         databaseManager.loadFiles();
+
         try {
             databaseManager.connect();
         } catch (SQLException e) {
@@ -29,6 +35,13 @@ public final class EnderLabApi extends JavaPlugin {
         register();
 
         prefix = new MessageApi("prefix").getMessage();
+
+        getCommand("settings").setExecutor(new SettingsCMD());
+        getCommand("settings").setTabCompleter(new SettingsCMD());
+
+        getServer().getPluginManager().registerEvents(new JoinListener(), this);
+
+        System.out.println("Finnish!");
     }
 
     public void register() {

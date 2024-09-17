@@ -1,0 +1,6 @@
+name: EnderLabApi
+version: '1.0-SNAPSHOT'
+main: de.villigi.enderlab.EnderLabApi
+
+commands:
+  settings:
